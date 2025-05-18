@@ -1,23 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './test.css';
 
-interface Field {
-  id: number;
-  type: string;
-  name: string;
-  instruction: string;
-  parentId: number | null; // or whatever type is appropriate
-  source: string;
-  showSingleField: boolean;
-  fields?: Field[]; // Optional nested fields
-  isDetached?: boolean;
-  hierarchyPath?: string;
-  isList?: boolean;
-  value?: string;
-}
-
 const ValueTypePopover = ({ onSelect, onClose, position }) => {
-  const popoverRef = useRef<HTMLDivElement>(null);
+  const popoverRef = useRef(null);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -33,9 +18,9 @@ const ValueTypePopover = ({ onSelect, onClose, position }) => {
   }, [onClose]);
 
   const types = [
-    { id: 'text', label: 'Text', color: '#ebf9f0', icon: '[AB]' },
-    { id: 'number', label: 'Number', color: '#fde7e7', icon: '[123]' },
-    { id: 'boolean', label: 'True/False', color: '#e8f0fe', icon: '[0/1]' }
+    { id: 'text', label: 'Text', color: '#ebf9f0' },
+    { id: 'number', label: 'Number', color: '#fde7e7' },
+    { id: 'boolean', label: 'True/False', color: '#e8f0fe' }
   ];
 
   return (
@@ -61,7 +46,7 @@ const ValueTypePopover = ({ onSelect, onClose, position }) => {
 
 // New component for Logic Popover
 const LogicTypePopover = ({ onSelect, onClose, position }) => {
-  const popoverRef = useRef<HTMLDivElement>(null);
+  const popoverRef = useRef(null);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -106,7 +91,7 @@ const LogicTypePopover = ({ onSelect, onClose, position }) => {
 
 const FieldInput = ({ field, onChange, onDuplicate, onDelete, onToggleList, onTypeArrowClick }) => {
   const [showDropdown, setShowDropdown] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef(null);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -140,7 +125,7 @@ const FieldInput = ({ field, onChange, onDuplicate, onDelete, onToggleList, onTy
         hierarchyPath = field.name;
       }
 
-      const newNestedObject: Field = { 
+      const newNestedObject = { 
         id: Date.now(),
         type: 'object',
         name: fieldName,
@@ -162,10 +147,11 @@ const FieldInput = ({ field, onChange, onDuplicate, onDelete, onToggleList, onTy
           type: 'text', // Changed from 'object' to 'text' to avoid double nesting
           name: 'item',
           instruction: '',
+
           parentId: newNestedObject.id,
           source: 'value',
           showSingleField: true
-        } as Field]; // Explicitly cast to Field
+        }];
       }
 
       // Signal to parent component to add this as a new top-level field
@@ -238,6 +224,8 @@ const FieldInput = ({ field, onChange, onDuplicate, onDelete, onToggleList, onTy
     );
   }
 
+
+
   return (
     <div className="field-input-container">
       <div className="field-input-header">
@@ -267,6 +255,10 @@ const FieldInput = ({ field, onChange, onDuplicate, onDelete, onToggleList, onTy
               </svg>
             </span>
           </button>
+
+
+
+
         </div>
         <div className="field-header-actions">
           <span className="toggle-list-label">List</span>
@@ -321,8 +313,8 @@ const FieldInput = ({ field, onChange, onDuplicate, onDelete, onToggleList, onTy
           className="field-name-input"
           placeholder="Key"
           value={field.name || ''}
-          onChange={(e) => onChange(field.id, { ...field, name: (e.target as HTMLInputElement).value })}
-          onKeyDown={(e) => handleKeyDown(e, field.id, (e.target as HTMLInputElement).value)}
+          onChange={(e) => onChange(field.id, { ...field, name: e.target.value })}
+          onKeyDown={(e) => handleKeyDown(e, field.id, e.target.value)}
         />
         {!field.showSingleField && (
           <input
@@ -339,7 +331,7 @@ const FieldInput = ({ field, onChange, onDuplicate, onDelete, onToggleList, onTy
 };
 
 const Test = ({ initialValue = '', onChange }) => {
-  const [fields, setFields] = useState<Field[]>([]);
+  const [fields, setFields] = useState([]);
   const [showEmptyState, setShowEmptyState] = useState(true);
   const [showTypePopover, setShowTypePopover] = useState(false);
   const [popoverPosition, setPopoverPosition] = useState({ x: 0, y: 0 });
@@ -366,6 +358,8 @@ const Test = ({ initialValue = '', onChange }) => {
     });
   };
 
+
+
   const handleAddClick = (event, parentId = null) => {
     const button = event.currentTarget;
     const parent = button.offsetParent;
@@ -390,16 +384,14 @@ const Test = ({ initialValue = '', onChange }) => {
   };
 
   const handleLogicTypeSelect = (type, source) => {
-    const newField: Field = {
-      id: Date.now(),
+    const newField = { 
+      id: Date.now(), 
       type: type,
       name: '',
       instruction: '',
       value: '',
       source: source,
-      fields: [],
-      parentId: null,
-      showSingleField: true
+      fields: []
     };
 
     if (activeParentId) {
@@ -431,105 +423,103 @@ const Test = ({ initialValue = '', onChange }) => {
   };
 
   const handleTypeSelect = (type, source) => {
-    const newField: Field = {
-      id: Date.now(),
-      type: type,
-      name: '',
-      instruction: '',
-      value: '',
-      source: source,
-      fields: [],
-      parentId: null,
-      showSingleField: true
+    const newField = { 
+        id: Date.now(), 
+        type: type,
+        name: '',
+        instruction: '',
+        value: '',
+        source: source,
+        fields: []
     };
 
     if (currentFieldId) {
+        setFields(prevFields => {
+            const updateFieldsRecursively = (fields) => {
+                return fields.map(field => {
+                    if (field.id === currentFieldId) {
+                        return { ...field, type, source, value: '', fields: [] };
+                    } else if (field.fields && field.fields.length > 0) {
+                        return { ...field, fields: updateFieldsRecursively(field.fields) };
+                    }
+                    return field;
+                });
+            };
+            return updateFieldsRecursively(prevFields);
+        });
+        setShowTypePopover(false);
+        setCurrentFieldId(null);
+    } else {
+        setFields([...fields, newField]);
+        setShowEmptyState(false);
+        setShowTypePopover(false);
+        setActiveParentId(null);
+    }
+};
+
+const duplicateField = (id) => {
+  const findFieldRecursively = (fields, id) => {
+    for (const field of fields) {
+      if (field.id === id) {
+        return field;
+      }
+      if (field.fields && field.fields.length > 0) {
+        const found = findFieldRecursively(field.fields, id);
+        if (found) return found;
+      }
+    }
+    return null;
+  };
+
+  const fieldToDuplicate = findFieldRecursively(fields, id);
+
+  if (fieldToDuplicate) {
+    const duplicatedField = {
+      ...JSON.parse(JSON.stringify(fieldToDuplicate)),
+      id: Date.now()
+    };
+
+    if (fieldToDuplicate.parentId) {
       setFields(prevFields => {
         const updateFieldsRecursively = (fields) => {
           return fields.map(field => {
-            if (field.id === currentFieldId) {
-              return { ...field, type, source, value: '', fields: [] };
+            if (field.id === fieldToDuplicate.parentId) {
+              const index = field.fields.findIndex(f => f.id === id);
+              const newFields = [...field.fields];
+              newFields.splice(index + 1, 0, duplicatedField);
+              return {
+                ...field,
+                fields: newFields
+              };
             } else if (field.fields && field.fields.length > 0) {
-              return { ...field, fields: updateFieldsRecursively(field.fields) };
+              return {
+                ...field,
+                fields: updateFieldsRecursively(field.fields)
+              };
             }
             return field;
           });
         };
         return updateFieldsRecursively(prevFields);
       });
-      setShowTypePopover(false);
-      setCurrentFieldId(null);
     } else {
-      setFields([...fields, newField]);
-      setShowEmptyState(false);
-      setShowTypePopover(false);
-      setActiveParentId(null);
+      const index = fields.findIndex(field => field.id === id);
+      const updatedFields = [...fields];
+      updatedFields.splice(index + 1, 0, duplicatedField);
+      setFields(updatedFields);
     }
-  };
+  }
+};
 
-  const duplicateField = (id) => {
-    const findFieldRecursively = (fields, id) => {
-      for (const field of fields) {
-        if (field.id === id) {
-          return field;
-        }
-        if (field.fields && field.fields.length > 0) {
-          const found = findFieldRecursively(field.fields, id);
-          if (found) return found;
-        }
-      }
-      return null;
-    };
+const handleDeleteField = (id) => {
+  const updatedFields = fields.filter(field => field.id !== id);
+  setFields(updatedFields);
+  if (updatedFields.length === 0) {
+    setShowEmptyState(true);
+  }
+};
 
-    const fieldToDuplicate = findFieldRecursively(fields, id);
-
-    if (fieldToDuplicate) {
-      const duplicatedField = {
-        ...JSON.parse(JSON.stringify(fieldToDuplicate)),
-        id: Date.now()
-      };
-
-      if (fieldToDuplicate.parentId) {
-        setFields(prevFields => {
-          const updateFieldsRecursively = (fields) => {
-            return fields.map(field => {
-              if (field.id === fieldToDuplicate.parentId) {
-                const index = field.fields.findIndex(f => f.id === id);
-                const newFields = [...field.fields];
-                newFields.splice(index + 1, 0, duplicatedField);
-                return {
-                  ...field,
-                  fields: newFields
-                };
-              } else if (field.fields && field.fields.length > 0) {
-                return {
-                  ...field,
-                  fields: updateFieldsRecursively(field.fields)
-                };
-              }
-              return field;
-            });
-          };
-          return updateFieldsRecursively(prevFields);
-        });
-      } else {
-        const index = fields.findIndex(field => field.id === id);
-        const updatedFields = [...fields];
-        updatedFields.splice(index + 1, 0, duplicatedField);
-        setFields(updatedFields);
-      }
-    }
-  };
-
-  const handleDeleteField = (id) => {
-    const updatedFields = fields.filter(field => field.id !== id);
-    setFields(updatedFields);
-    if (updatedFields.length === 0) {
-      setShowEmptyState(true);
-    }
-  };
-
-  // Modified function to handle object field enter press
+// Modified function to handle object field enter press
   const handleFieldChange = (id, updatedField) => {
     // Special case for handling 'newObject'
     if (id === 'newObject') {
@@ -628,7 +618,7 @@ const Test = ({ initialValue = '', onChange }) => {
       }
     }
 
-    const newField: Field = {
+    const newField = { 
       id: Date.now(),
       type: 'object',
       name: '',
@@ -718,7 +708,7 @@ const Test = ({ initialValue = '', onChange }) => {
   const renderField = (field) => {
     // Helper to create a clean display name with hierarchy
     const getCleanDisplayName = (field) => {
-      if (field.type !== 'object' || !field.name) return field.name || '';
+      if (!field.type === 'object' || !field.name) return field.name || '';
       
       // If no hierarchy path, just return the name
       if (!field.hierarchyPath) return field.name;
